@@ -204,22 +204,27 @@ assign(Base.prototype, Events, {
             // If we have a defined type and the new type doesn't match, and we are not null, throw error.
             // If we require specific value and new one is not one of them, throw error (unless it has default value or we're unsetting it with undefined).
 
-            if (newVal === undefined && def.required) {
-                throw new TypeError('Required property \'' + attr + '\' must be of type ' + def.type + '. Tried to set ' + newVal);
-            }
-            if (newVal === null && def.required && !def.allowNull) {
-                throw new TypeError('Property \'' + attr + '\' must be of type ' + def.type + ' (cannot be null). Tried to set ' + newVal);
-            }
-            if ((def.type && def.type !== 'any' && def.type !== newType) && newVal !== null && newVal !== undefined) {
-                throw new TypeError('Property \'' + attr + '\' must be of type ' + def.type + '. Tried to set ' + newVal);
-            }
-            if (def.values && !includes(def.values, newVal)) {
-                var defaultValue = result(def, 'default');
-                if (unset && defaultValue !== undefined) {
-                    newVal = defaultValue;
-                } else if (!unset || (unset && newVal !== undefined)) {
-                    throw new TypeError('Property \'' + attr + '\' must be one of values: ' + def.values.join(', ') + '. Tried to set ' + newVal);
-                }
+            var defaultValue = result(def, 'default');
+
+            if (def.type === 'array' && newVal === null && def.required && defaultValue) {
+                newVal = defaultValue;
+            } else {
+              if (newVal === undefined && def.required) {
+                  throw new TypeError('Required property \'' + attr + '\' must be of type ' + def.type + '. Tried to set ' + newVal);
+              }
+              if (newVal === null && def.required && !def.allowNull) {
+                  throw new TypeError('Property \'' + attr + '\' must be of type ' + def.type + ' (cannot be null). Tried to set ' + newVal);
+              }
+              if ((def.type && def.type !== 'any' && def.type !== newType) && newVal !== null && newVal !== undefined) {
+                  throw new TypeError('Property \'' + attr + '\' must be of type ' + def.type + '. Tried to set ' + newVal);
+              }
+              if (def.values && !includes(def.values, newVal)) {
+                  if (unset && defaultValue !== undefined) {
+                      newVal = defaultValue;
+                  } else if (!unset || (unset && newVal !== undefined)) {
+                      throw new TypeError('Property \'' + attr + '\' must be one of values: ' + def.values.join(', ') + '. Tried to set ' + newVal);
+                  }
+              }
             }
 
             // We know this has 'changed' if it's the initial set, so skip a potentially expensive isEqual check.
